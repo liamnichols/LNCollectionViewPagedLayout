@@ -17,7 +17,7 @@
 		16D4740317B1048300786BCB /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 16D4740217B1048300786BCB /* Default@2x.png */; };
 		16D4740517B1048300786BCB /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 16D4740417B1048300786BCB /* Default-568h@2x.png */; };
 		16D4740817B1048300786BCB /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 16D4740717B1048300786BCB /* ViewController.m */; };
-		16D4740B17B1048300786BCB /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 16D4740917B1048300786BCB /* ViewController.xib */; };
+		1FEAA5253DC984A16CDC64B7 /* LNCollectionViewPagedLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FEAA9DCD71A61B67DA59255 /* LNCollectionViewPagedLayout.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,7 +36,8 @@
 		16D4740417B1048300786BCB /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		16D4740617B1048300786BCB /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		16D4740717B1048300786BCB /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		16D4740A17B1048300786BCB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
+		1FEAA7CE8BE0AFE19F5411F3 /* LNCollectionViewPagedLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LNCollectionViewPagedLayout.h; sourceTree = "<group>"; };
+		1FEAA9DCD71A61B67DA59255 /* LNCollectionViewPagedLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LNCollectionViewPagedLayout.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,7 +89,6 @@
 				16D473FE17B1048300786BCB /* AppDelegate.m */,
 				16D4740617B1048300786BCB /* ViewController.h */,
 				16D4740717B1048300786BCB /* ViewController.m */,
-				16D4740917B1048300786BCB /* ViewController.xib */,
 				16D473F517B1048300786BCB /* Supporting Files */,
 			);
 			path = PagedLayout;
@@ -111,6 +111,8 @@
 		1FEAAA379B592CE86615FD60 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				1FEAA7CE8BE0AFE19F5411F3 /* LNCollectionViewPagedLayout.h */,
+				1FEAA9DCD71A61B67DA59255 /* LNCollectionViewPagedLayout.m */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -170,7 +172,6 @@
 				16D4740117B1048300786BCB /* Default.png in Resources */,
 				16D4740317B1048300786BCB /* Default@2x.png in Resources */,
 				16D4740517B1048300786BCB /* Default-568h@2x.png in Resources */,
-				16D4740B17B1048300786BCB /* ViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -184,6 +185,7 @@
 				16D473FB17B1048300786BCB /* main.m in Sources */,
 				16D473FF17B1048300786BCB /* AppDelegate.m in Sources */,
 				16D4740817B1048300786BCB /* ViewController.m in Sources */,
+				1FEAA5253DC984A16CDC64B7 /* LNCollectionViewPagedLayout.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,14 +198,6 @@
 				16D473F817B1048300786BCB /* en */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		16D4740917B1048300786BCB /* ViewController.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				16D4740A17B1048300786BCB /* en */,
-			);
-			name = ViewController.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -308,6 +302,7 @@
 				16D4741017B1048300786BCB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

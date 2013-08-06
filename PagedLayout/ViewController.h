@@ -7,7 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "LNCollectionViewPagedLayout.h"
 
-@interface ViewController : UIViewController
+@interface ViewController : UIViewController <UICollectionViewDelegate, UICollectionViewDataSource, LNCollectionViewDelegatePagedLayout>
+
+@property (nonatomic, strong) UICollectionView *collectionView;
 
 @end
