@@ -27,8 +27,12 @@
 
 @protocol LNCollectionViewDelegatePagedLayout <UICollectionViewDelegate>
 
+@optional
+
+///Retrieve the size of a cell at a specified indexPath
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath;
 
+///Start a specified section on a new page rather than underneath an old section
 - (BOOL)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout shouldStartSectionOnNewPage:(NSInteger)section;
 
 @end
