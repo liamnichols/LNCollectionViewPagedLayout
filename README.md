@@ -60,6 +60,5 @@ See the header and demo for usage.
 
 TODO
 ---  
-Add the option to place a footer view at the bottom of each/specific page(s).  
-Add sample usage to this read me.  
-Add to cocoapods.  
+- Add the option to place a footer view at the bottom of each/specific page(s).  
+- Add to cocoapods.  
