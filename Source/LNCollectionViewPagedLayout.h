@@ -22,6 +22,10 @@
 ///The default value is NO.
 @property (nonatomic) BOOL startAllSectionsOnNewPage;
 
+///The insets for the content of each page
+///The default value is UIEdgeInsetsZero
+@property (nonatomic) UIEdgeInsets pageContentInset;
+
 @end
 
 

@@ -48,6 +48,7 @@
     _minimumRowSpacing = 10.0f;
     _startAllSectionsOnNewPage = NO;
     _itemSize = CGSizeMake(10, 10);
+    _pageContentInset = UIEdgeInsetsZero;
 }
 
 -(void)dealloc
@@ -72,6 +73,15 @@
     if (_startAllSectionsOnNewPage != startAllSectionsOnNewPage)
     {
         _startAllSectionsOnNewPage = startAllSectionsOnNewPage;
+        [self invalidateLayout];
+    }
+}
+
+- (void)setPageContentInset:(UIEdgeInsets)pageContentInset
+{
+    if (UIEdgeInsetsEqualToEdgeInsets(_pageContentInset, pageContentInset) != YES)
+    {
+        _pageContentInset = pageContentInset;
         [self invalidateLayout];
     }
 }
@@ -113,72 +123,78 @@
     self.itemAttributes = [NSMutableDictionary dictionaryWithCapacity:self.itemCount];
 
     __block LNCollectionViewPagedLayout *blockself = self;
-    __block CGFloat pageHeight = CGRectGetHeight(self.collectionView.bounds);
+    __block CGRect pageRect = UIEdgeInsetsInsetRect(blockself.collectionView.bounds, self.pageContentInset);
     __block CGFloat currentPage = 0;
-    __block CGFloat currentHeight = 0;
-    __block CGFloat currentHeightOnPage = 10;
+    __block CGFloat currentOffset = self.pageContentInset.top;
 
     [self enumerateIndexPaths:^(NSIndexPath *indexPath, BOOL isLast) {
 
-        NSLog(@"Enumerating IndexPath: [%i, %i] isLast:%@",indexPath.section,indexPath.row,isLast ? @"YES" : @"NO");
-
-        //Get the height of this cell
+        //Get the size of this cell
         CGSize itemSize = [self sizeForItemAtIndexPath:indexPath];
 
         //Assert if the item is too tall
-        NSAssert(itemSize.height <= pageHeight,@"itemSize (%f) > pageHeight (%f)", itemSize,pageHeight);
+        NSAssert(itemSize.height <= CGRectGetHeight(pageRect),@"Cell must not exceed the page size");
+        //Assert if the item is too wide
+        NSAssert(itemSize.width <= CGRectGetWidth(pageRect),@"Cell must not exceed the page size");
 
-        //Check if we need to start a new page...
-        BOOL needNewPage = currentHeightOnPage + blockself.minimumRowSpacing + itemSize.height > pageHeight;
+        //Get the current offset before adding this cell
+        CGFloat currentOffsetOnThisPageBeforeThisCell = currentOffset - (CGRectGetHeight(blockself.collectionView.bounds) * currentPage);
 
-        //We would also need to start a new page if we are on a new section that wants to start fresh
-        if (indexPath.section != 0 && indexPath.row == 0 && [self shouldStartSectionOnNewPage:indexPath.section] && needNewPage == NO)
-            needNewPage = YES;
+        //Get the spacing to place above this cell (if needed)
+        CGFloat spacingAboveThisCell = currentOffsetOnThisPageBeforeThisCell == blockself.pageContentInset.top ? 0 : blockself.minimumRowSpacing;
 
-        //Start a new page if needed
-        if (needNewPage)
+        //Get the offset after adding this cell
+        CGFloat offsetOnThisPageAfterThisCell = currentOffsetOnThisPageBeforeThisCell + spacingAboveThisCell + itemSize.height;
+
+        //Check if this would lap over onto a new page
+        BOOL wouldNeedNewPage = offsetOnThisPageAfterThisCell > (blockself.pageContentInset.top + CGRectGetHeight(pageRect));
+
+        //Check if a new page is going to be forced
+        if (indexPath.section != 0 && indexPath.row == 0 && [blockself shouldStartSectionOnNewPage:indexPath.section])
+            wouldNeedNewPage = YES;
+
+        //If we do want a new page, move to it.
+        if (wouldNeedNewPage)
         {
-            //Increment the current page
             currentPage ++;
-
-            //Reset the current heightOnPage
-            currentHeightOnPage = 10;
-
-            //Get the current height (of the whole content view)
-            currentHeight = (pageHeight * currentPage);
+            currentOffset = CGRectGetHeight(blockself.collectionView.bounds) * currentPage + CGRectGetMinY(pageRect);
         }
 
-        //If height on page isn't 0, add some padding
-        if (currentHeightOnPage != 0)
-        {
-            currentHeight += blockself.minimumRowSpacing;
-        }
+        CGRect cellRect = CGRectZero;
 
-        //We now know where to put this item and how big it should be
-        CGRect itemFrame = CGRectMake(CGRectGetWidth(blockself.collectionView.bounds)/2-itemSize.width/2, currentHeight, itemSize.width, itemSize.height);
+        //Detect if we are at the top of a page
+        BOOL isAtTheStartOfAPage = currentOffset == CGRectGetHeight(blockself.collectionView.bounds) * currentPage + CGRectGetMinY(pageRect);
+
+        //Get the offset for this cell
+        CGFloat offsetForCell = isAtTheStartOfAPage ? currentOffset : currentOffset + blockself.minimumRowSpacing;
+
+        //Get the x of this cell
+        CGFloat x = CGRectGetWidth(blockself.collectionView.bounds)/2 - itemSize.width/2;
+
+        //Update the cell rect
+        cellRect.size = itemSize;
+        cellRect.origin.y = offsetForCell;
+        cellRect.origin.x = x;
+
+        //Update the current offset
+        currentOffset = offsetForCell + cellRect.size.height;
 
         //Create our layout attributes for this item
         UICollectionViewLayoutAttributes *layoutAttributes = [UICollectionViewLayoutAttributes layoutAttributesForCellWithIndexPath:indexPath];
 
         //Set the frame on the attributes
-        layoutAttributes.frame = itemFrame;
+        layoutAttributes.frame = cellRect;
 
         //Add the attributes to our dictionary
         [self.itemAttributes setObject:layoutAttributes forKey:indexPath];
 
-        //Calculate how much we need to move down for the next item
-        CGFloat howMuchIveMoved = CGRectGetHeight(itemFrame);
 
-        //Update the currentHeight to reflect how much i've moved
-        currentHeight += howMuchIveMoved;
-
-        //Update the currentHeightOnPage to reflect how much i've moved
-        currentHeightOnPage += howMuchIveMoved;
-
-        //If it is the last page, append the total height so it completes a page
         if (isLast)
         {
-            blockself.totalHeight = currentHeight + (pageHeight - currentHeightOnPage);
+
+            CGFloat n = CGRectGetHeight(blockself.collectionView.bounds);
+            CGFloat x = currentOffset;
+            blockself.totalHeight =  ceilf(x / n) * n;
         }
 
     }];

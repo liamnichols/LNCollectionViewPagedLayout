@@ -21,6 +21,8 @@
     [super loadView];
 
     LNCollectionViewPagedLayout *layout = [[LNCollectionViewPagedLayout alloc] init];
+    layout.pageContentInset = UIEdgeInsetsMake(10, 10, 10, 10);
+    layout.startAllSectionsOnNewPage = YES;
 
     self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:layout];
     self.collectionView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
