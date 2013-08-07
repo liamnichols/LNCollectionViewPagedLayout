@@ -10,7 +10,7 @@ Requirements
 
 Features
 ---
-- Bidirectional configurations by using the `scrollDirection` property.  
+- Bidirectional scrolling configurations by using the `scrollDirection` property.  
 - Adjustable content insets for the page by using the `pageContentInset` property.  
 - Adjustable spacing between cells by using the `minimumRowSpacing` property.  
 - Multiple section support.  
