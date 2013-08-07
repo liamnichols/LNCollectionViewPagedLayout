@@ -8,10 +8,15 @@
 
 #import "LNCollectionViewPagedLayout.h"
 
+#define RELEVANT_DIMENSION(rect) [blockself getRelevantDimension:rect]
+#define RELEVANT_SIZE(size) [blockself getRelevantSize:size]
+#define RELEVANT_POINT(rect) [blockself getRelevantPoint:rect]
+#define RELEVANT_INSET(insets) [blockself getRelevantInset:insets]
+
 @interface LNCollectionViewPagedLayout ()
 
 @property (nonatomic, assign) NSInteger itemCount;
-@property (nonatomic) CGFloat totalHeight;
+@property (nonatomic) CGFloat totalContentLength;
 @property (nonatomic, strong) NSMutableDictionary *itemAttributes;
 
 @end
@@ -47,8 +52,9 @@
 {
     _minimumRowSpacing = 10.0f;
     _startAllSectionsOnNewPage = NO;
-    _itemSize = CGSizeMake(10, 10);
+    _itemSize = CGSizeZero;
     _pageContentInset = UIEdgeInsetsZero;
+    _scrollDirection = UICollectionViewScrollDirectionVertical;
 }
 
 -(void)dealloc
@@ -82,6 +88,15 @@
     if (UIEdgeInsetsEqualToEdgeInsets(_pageContentInset, pageContentInset) != YES)
     {
         _pageContentInset = pageContentInset;
+        [self invalidateLayout];
+    }
+}
+
+- (void)setScrollDirection:(UICollectionViewScrollDirection)scrollDirection
+{
+    if (_scrollDirection != scrollDirection)
+    {
+        _scrollDirection = scrollDirection;
         [self invalidateLayout];
     }
 }
@@ -125,7 +140,7 @@
     __block LNCollectionViewPagedLayout *blockself = self;
     __block CGRect pageRect = UIEdgeInsetsInsetRect(blockself.collectionView.bounds, self.pageContentInset);
     __block CGFloat currentPage = 0;
-    __block CGFloat currentOffset = self.pageContentInset.top;
+    __block CGFloat currentOffset = RELEVANT_INSET(self.pageContentInset);
 
     [self enumerateIndexPaths:^(NSIndexPath *indexPath, BOOL isLast) {
 
@@ -138,16 +153,16 @@
         NSAssert(itemSize.width <= CGRectGetWidth(pageRect),@"Cell must not exceed the page size");
 
         //Get the current offset before adding this cell
-        CGFloat currentOffsetOnThisPageBeforeThisCell = currentOffset - (CGRectGetHeight(blockself.collectionView.bounds) * currentPage);
+        CGFloat currentOffsetOnThisPageBeforeThisCell = currentOffset - (RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage);
 
         //Get the spacing to place above this cell (if needed)
-        CGFloat spacingAboveThisCell = currentOffsetOnThisPageBeforeThisCell == blockself.pageContentInset.top ? 0 : blockself.minimumRowSpacing;
+        CGFloat spacingAboveThisCell = currentOffsetOnThisPageBeforeThisCell == RELEVANT_INSET(blockself.pageContentInset) ? 0 : blockself.minimumRowSpacing;
 
         //Get the offset after adding this cell
-        CGFloat offsetOnThisPageAfterThisCell = currentOffsetOnThisPageBeforeThisCell + spacingAboveThisCell + itemSize.height;
+        CGFloat offsetOnThisPageAfterThisCell = currentOffsetOnThisPageBeforeThisCell + spacingAboveThisCell + RELEVANT_SIZE(itemSize);
 
         //Check if this would lap over onto a new page
-        BOOL wouldNeedNewPage = offsetOnThisPageAfterThisCell > (blockself.pageContentInset.top + CGRectGetHeight(pageRect));
+        BOOL wouldNeedNewPage = offsetOnThisPageAfterThisCell > (RELEVANT_INSET(blockself.pageContentInset) + RELEVANT_DIMENSION(pageRect));
 
         //Check if a new page is going to be forced
         if (indexPath.section != 0 && indexPath.row == 0 && [blockself shouldStartSectionOnNewPage:indexPath.section])
@@ -157,27 +172,45 @@
         if (wouldNeedNewPage)
         {
             currentPage ++;
-            currentOffset = CGRectGetHeight(blockself.collectionView.bounds) * currentPage + CGRectGetMinY(pageRect);
+            currentOffset = RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage + RELEVANT_POINT(pageRect);
         }
 
         CGRect cellRect = CGRectZero;
 
         //Detect if we are at the top of a page
-        BOOL isAtTheStartOfAPage = currentOffset == CGRectGetHeight(blockself.collectionView.bounds) * currentPage + CGRectGetMinY(pageRect);
+        BOOL isAtTheStartOfAPage = currentOffset == RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage + RELEVANT_POINT(pageRect);
 
         //Get the offset for this cell
         CGFloat offsetForCell = isAtTheStartOfAPage ? currentOffset : currentOffset + blockself.minimumRowSpacing;
 
-        //Get the x of this cell
-        CGFloat x = CGRectGetWidth(blockself.collectionView.bounds)/2 - itemSize.width/2;
+        switch (blockself.scrollDirection)
+        {
+            case UICollectionViewScrollDirectionVertical:
+            {
+                //Get the x of this cell
+                CGFloat x = CGRectGetWidth(blockself.collectionView.bounds)/2 - itemSize.width/2;
 
-        //Update the cell rect
-        cellRect.size = itemSize;
-        cellRect.origin.y = offsetForCell;
-        cellRect.origin.x = x;
+                //Update the cell rect
+                cellRect.size = itemSize;
+                cellRect.origin.y = offsetForCell;
+                cellRect.origin.x = x;
+                break;
+            }
+            case UICollectionViewScrollDirectionHorizontal:
+            {
+                //Get the y of this cell
+                CGFloat y = CGRectGetHeight(blockself.collectionView.bounds)/2 - itemSize.height/2;
+
+                //Update the cell rect
+                cellRect.size = itemSize;
+                cellRect.origin.y = y;
+                cellRect.origin.x = offsetForCell;
+                break;
+            }
+        }
 
         //Update the current offset
-        currentOffset = offsetForCell + cellRect.size.height;
+        currentOffset = offsetForCell + RELEVANT_SIZE(cellRect.size);
 
         //Create our layout attributes for this item
         UICollectionViewLayoutAttributes *layoutAttributes = [UICollectionViewLayoutAttributes layoutAttributesForCellWithIndexPath:indexPath];
@@ -192,20 +225,83 @@
         if (isLast)
         {
 
-            CGFloat n = CGRectGetHeight(blockself.collectionView.bounds);
+            CGFloat n = RELEVANT_DIMENSION(blockself.collectionView.bounds);
             CGFloat x = currentOffset;
-            blockself.totalHeight =  ceilf(x / n) * n;
+            blockself.totalContentLength =  ceilf(x / n) * n;
         }
 
     }];
+}
+
+- (CGFloat)getRelevantPoint:(CGRect)rect
+{
+    switch (self.scrollDirection)
+    {
+        case UICollectionViewScrollDirectionVertical:
+            return CGRectGetMinY(rect);
+
+        case UICollectionViewScrollDirectionHorizontal:
+            return CGRectGetMinX(rect);
+    }
+}
+
+- (CGFloat)getRelevantDimension:(CGRect)rect
+{
+    switch (self.scrollDirection)
+    {
+        case UICollectionViewScrollDirectionVertical:
+            return CGRectGetHeight(rect);
+
+        case UICollectionViewScrollDirectionHorizontal:
+            return CGRectGetWidth(rect);
+    }    
+}
+
+
+- (CGFloat)getRelevantSize:(CGSize)size
+{
+    switch (self.scrollDirection)
+    {
+        case UICollectionViewScrollDirectionVertical:
+            return size.height;
+
+        case UICollectionViewScrollDirectionHorizontal:
+            return size.width;
+    }    
+}
+
+- (CGFloat)getRelevantInset:(UIEdgeInsets)inset
+{
+    switch (self.scrollDirection)
+    {
+        case UICollectionViewScrollDirectionVertical:
+            return inset.top;
+
+        case UICollectionViewScrollDirectionHorizontal:
+            return inset.left;   
+    }   
 }
 
 - (CGSize)collectionViewContentSize
 {
     CGSize size = CGSizeZero;
 
-    size.width = CGRectGetWidth(self.collectionView.bounds);
-    size.height = self.totalHeight;
+    switch (self.scrollDirection)
+    {
+        case UICollectionViewScrollDirectionVertical:
+        {
+            size.width = CGRectGetWidth(self.collectionView.bounds);
+            size.height = self.totalContentLength;
+            break;
+        }
+
+        case UICollectionViewScrollDirectionHorizontal:
+        {
+            size.width = self.totalContentLength;
+            size.height = CGRectGetHeight(self.collectionView.bounds);
+            break;
+        }
+    }
 
     return size;
 }
