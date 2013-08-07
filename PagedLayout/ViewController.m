@@ -23,6 +23,7 @@
     LNCollectionViewPagedLayout *layout = [[LNCollectionViewPagedLayout alloc] init];
     layout.pageContentInset = UIEdgeInsetsMake(10, 10, 10, 10);
     layout.startAllSectionsOnNewPage = YES;
+    layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
 
     self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:layout];
     self.collectionView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
@@ -53,7 +54,13 @@
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    return CGSizeMake(CGRectGetWidth(collectionView.bounds) - 20, (arc4random()%(600-100))+100);
+    switch (collectionViewLayout.scrollDirection)
+    {
+        case UICollectionViewScrollDirectionHorizontal:
+            return CGSizeMake((arc4random()%(600-100))+100, CGRectGetHeight(collectionView.bounds) - 20);
+        case UICollectionViewScrollDirectionVertical:
+            return CGSizeMake(CGRectGetWidth(collectionView.bounds) - 20, (arc4random()%(600-100))+100);
+    }
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
