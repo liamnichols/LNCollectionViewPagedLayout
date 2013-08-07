@@ -11,7 +11,7 @@
 @interface LNCollectionViewPagedLayout : UICollectionViewLayout
 
 ///The size of the cells
-///The default value is { 10, 10 }.
+///The default value is CGSizeZero.
 @property (nonatomic) CGSize itemSize;
 
 ///The minimum space between each cell
@@ -25,6 +25,10 @@
 ///The insets for the content of each page
 ///The default value is UIEdgeInsetsZero
 @property (nonatomic) UIEdgeInsets pageContentInset;
+
+///The scroll direction of the collectionView
+///The default value is UICollectionViewScrollDirectionVertical
+@property (nonatomic) UICollectionViewScrollDirection scrollDirection;
 
 @end
 
