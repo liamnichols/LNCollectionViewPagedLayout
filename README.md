@@ -17,6 +17,10 @@ Requirements
 - iOS 6  
 - ARC  
 
+Preview
+---
+![](https://raw.github.com/liamnichols/LNCollectionViewPagedLayout/master/example.gif)
+
 Usage
 ---
 **Creating an instance of LNCollectionViewPagedLayout with basic configuration:**
