@@ -182,8 +182,10 @@
 
     self.footerAttributes = [NSMutableDictionary new];
 
+    //Using the bounds to get the pageRect was not stable as the origin is not always CGPointZero.
     __block LNCollectionViewPagedLayout *blockself = self;
-    __block CGRect pageRect = UIEdgeInsetsInsetRect(blockself.collectionView.bounds, self.pageContentInset);
+    CGRect zeroOriginBounds = (CGRect){.origin = CGPointZero, .size = blockself.collectionView.bounds.size};
+    __block CGRect pageRect = UIEdgeInsetsInsetRect(zeroOriginBounds, self.pageContentInset);
     __block NSInteger currentPage = 0;
     __block CGFloat currentOffset = RELEVANT_INSET(self.pageContentInset);
 
@@ -454,6 +456,8 @@
     }
     return count;
 }
+
+#pragma mark - Layout Attributes
 
 - (UICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath
 {

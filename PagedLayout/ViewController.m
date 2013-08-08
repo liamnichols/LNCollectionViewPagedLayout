@@ -46,26 +46,24 @@
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
 {
-    u_int32_t i = 2 + arc4random() % 7;
-    NSLog(@"%i sections", i);
-    return i;
+    return [[self datasource] count];
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    u_int32_t i = 5 + arc4random() % 15;
-    NSLog(@"%i rows in section %i",i, section);
-    return i;
+    return [[[self datasource] objectAtIndex:section] count];
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
+    CGFloat n = [[[[self datasource] objectAtIndex:indexPath.section] objectAtIndex:indexPath.row] floatValue];
+
     switch (collectionViewLayout.scrollDirection)
     {
         case UICollectionViewScrollDirectionHorizontal:
-            return CGSizeMake((arc4random()%(600-100))+100, CGRectGetHeight(collectionView.bounds) - 20);
+            return CGSizeMake(n, CGRectGetHeight(collectionView.bounds) - 20);
         case UICollectionViewScrollDirectionVertical:
-            return CGSizeMake(CGRectGetWidth(collectionView.bounds) - 20, (arc4random()%(600-100))+100);
+            return CGSizeMake(CGRectGetWidth(collectionView.bounds) - 20, n);
     }
 }
 
@@ -135,6 +133,47 @@
     label.text = [NSString stringWithFormat:@"Page: %i Item Count: %i",pageNumber,itemCount];
 
     return view;
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    //animations do not currently work property.. reloadData however works fine for now.
+//    //Reload the item (will calculate a new random size)
+//    [[[self datasource] objectAtIndex:indexPath.section] setObject:@100 atIndex:indexPath.row];
+//
+//    NSArray *paths = @[indexPath];
+//    [collectionView reloadItemsAtIndexPaths:paths];
+}
+
+-(NSMutableArray *)datasource
+{
+    static NSMutableArray *datasource = nil;
+    if (datasource == nil)
+    {
+        datasource = [NSMutableArray new];
+
+        NSMutableArray *section1 = [NSMutableArray new];
+        [section1 addObject:@50];
+        [section1 addObject:@60];
+        [section1 addObject:@70];
+        [section1 addObject:@50];
+        [section1 addObject:@70];
+        [section1 addObject:@40];
+        [section1 addObject:@60];
+
+        NSMutableArray *section2 = [NSMutableArray new];
+        [section2 addObject:@60];
+        [section2 addObject:@50];
+        [section2 addObject:@60];
+        [section2 addObject:@60];
+        [section2 addObject:@70];
+        [section2 addObject:@60];
+        [section2 addObject:@70];
+
+        [datasource addObject:section1];
+        [datasource addObject:section2];
+    }
+    return datasource;
 }
 
 @end
