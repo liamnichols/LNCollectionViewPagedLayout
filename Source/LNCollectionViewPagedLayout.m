@@ -12,12 +12,15 @@
 #define RELEVANT_SIZE(size) [blockself getRelevantSize:size]
 #define RELEVANT_POINT(rect) [blockself getRelevantPoint:rect]
 #define RELEVANT_INSET(insets) [blockself getRelevantInset:insets]
+#define RELEVANT_END_INSET(insets) [blockself getRelevantEndInset:insets]
 
 @interface LNCollectionViewPagedLayout ()
 
 @property (nonatomic, assign) NSInteger itemCount;
 @property (nonatomic) CGFloat totalContentLength;
 @property (nonatomic, strong) NSMutableDictionary *itemAttributes;
+@property (nonatomic, strong) NSMutableDictionary *footerAttributes;
+@property (nonatomic, strong) NSMutableDictionary *pageNumberLookupDictionary;
 
 @end
 
@@ -53,6 +56,7 @@
     _minimumRowSpacing = 10.0f;
     _startAllSectionsOnNewPage = NO;
     _itemSize = CGSizeZero;
+    _footerSize = CGSizeZero;
     _pageContentInset = UIEdgeInsetsZero;
     _scrollDirection = UICollectionViewScrollDirectionVertical;
 }
@@ -61,6 +65,12 @@
 {
     [_itemAttributes removeAllObjects];
     _itemAttributes = nil;
+
+    [_footerAttributes removeAllObjects];
+    _footerAttributes = nil;
+
+    [_pageNumberLookupDictionary removeAllObjects];
+    _pageNumberLookupDictionary = nil;
 }
 
 #pragma mark - Invalidating Setters
@@ -101,6 +111,24 @@
     }
 }
 
+- (void)setItemSize:(CGSize)itemSize
+{
+    if (CGSizeEqualToSize(_itemSize, itemSize) != YES)
+    {
+        _itemSize = itemSize;
+        [self invalidateLayout];
+    }
+}
+
+- (void)setFooterSize:(CGSize)footerSize
+{
+    if (CGSizeEqualToSize(_footerSize, footerSize) != YES)
+    {
+        _footerSize = footerSize;
+        [self invalidateLayout];
+    }
+}
+
 #pragma mark - Getting Properties
 
 - (BOOL)shouldStartSectionOnNewPage:(NSInteger)section
@@ -127,20 +155,84 @@
     return self.itemSize;
 }
 
+- (CGSize)sizeForFooterOnPage:(NSInteger)pageNumber
+{
+    id<LNCollectionViewDelegatePagedLayout> del = (id<LNCollectionViewDelegatePagedLayout>)self.collectionView.delegate;
+
+    if ([del respondsToSelector:@selector(collectionView:layout:sizeForFooterOnPage:)])
+    {
+        return [del collectionView:self.collectionView layout:self sizeForFooterOnPage:pageNumber];
+    }
+    return self.footerSize;
+}
+
 #pragma mark - creating the layout
 
 - (void)prepareLayout
 {
     [self.itemAttributes removeAllObjects];
+    [self.footerAttributes removeAllObjects];
+    [self.pageNumberLookupDictionary removeAllObjects];
 
     self.itemCount = [self getTotalItemCount];
 
     self.itemAttributes = [NSMutableDictionary dictionaryWithCapacity:self.itemCount];
 
+    self.pageNumberLookupDictionary = [NSMutableDictionary dictionaryWithCapacity:self.itemCount];
+
+    self.footerAttributes = [NSMutableDictionary new];
+
     __block LNCollectionViewPagedLayout *blockself = self;
     __block CGRect pageRect = UIEdgeInsetsInsetRect(blockself.collectionView.bounds, self.pageContentInset);
-    __block CGFloat currentPage = 0;
+    __block NSInteger currentPage = 0;
     __block CGFloat currentOffset = RELEVANT_INSET(self.pageContentInset);
+
+    __block void(^addFooterToPage)(CGFloat startOffset, CGSize footerSize) = ^(CGFloat startOffset, CGSize footerSize){
+
+        //Get the footer rect
+        CGRect footerRect = CGRectZero;
+
+        //Get the offset for the footer
+        CGFloat offsetForFooter = startOffset + (RELEVANT_INSET(blockself.pageContentInset) + (RELEVANT_DIMENSION(pageRect) - RELEVANT_SIZE(footerSize)));
+
+        //Apply the footer
+        switch (blockself.scrollDirection)
+        {
+            case UICollectionViewScrollDirectionVertical:
+            {
+                //Get the x of this footer
+                CGFloat x = CGRectGetWidth(blockself.collectionView.bounds)/2 - footerSize.width/2;
+
+                //Update the cell rect
+                footerRect.size = footerSize;
+                footerRect.origin.y = offsetForFooter;
+                footerRect.origin.x = x;
+                break;
+            }
+            case UICollectionViewScrollDirectionHorizontal:
+            {
+                //Get the y of this footer
+                CGFloat y = CGRectGetHeight(blockself.collectionView.bounds)/2 - footerSize.height/2;
+
+                //Update the cell rect
+                footerRect.size = footerSize;
+                footerRect.origin.y = y;
+                footerRect.origin.x = offsetForFooter;
+                break;
+            }
+        }
+
+        //Create our layout attributes for this footer
+        NSIndexPath *footerIndexPath = [[self.pageNumberLookupDictionary allKeysForObject:@(currentPage)] lastObject];
+        UICollectionViewLayoutAttributes *footerLayoutAttributes = [UICollectionViewLayoutAttributes layoutAttributesForSupplementaryViewOfKind:UICollectionElementKindSectionFooter withIndexPath:footerIndexPath];
+
+        //Set the frame on the attributes
+        footerLayoutAttributes.frame = footerRect;
+
+        //Add the attributes to our dictionary
+        [blockself.footerAttributes setObject:footerLayoutAttributes forKey:footerIndexPath];
+
+    };
 
     [self enumerateIndexPaths:^(NSIndexPath *indexPath, BOOL isLast) {
 
@@ -152,8 +244,11 @@
         //Assert if the item is too wide
         NSAssert(itemSize.width <= CGRectGetWidth(pageRect),@"Cell must not exceed the page size");
 
+        //Get the offset for the start of this page
+        CGFloat startOffsetForThisPage = (RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage);
+
         //Get the current offset before adding this cell
-        CGFloat currentOffsetOnThisPageBeforeThisCell = currentOffset - (RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage);
+        CGFloat currentOffsetOnThisPageBeforeThisCell = currentOffset - startOffsetForThisPage;
 
         //Get the spacing to place above this cell (if needed)
         CGFloat spacingAboveThisCell = currentOffsetOnThisPageBeforeThisCell == RELEVANT_INSET(blockself.pageContentInset) ? 0 : blockself.minimumRowSpacing;
@@ -161,8 +256,11 @@
         //Get the offset after adding this cell
         CGFloat offsetOnThisPageAfterThisCell = currentOffsetOnThisPageBeforeThisCell + spacingAboveThisCell + RELEVANT_SIZE(itemSize);
 
+        //Get the size of the footer for this page
+        CGSize footerSizeForThisPage = [self sizeForFooterOnPage:currentPage];
+
         //Check if this would lap over onto a new page
-        BOOL wouldNeedNewPage = offsetOnThisPageAfterThisCell > (RELEVANT_INSET(blockself.pageContentInset) + RELEVANT_DIMENSION(pageRect));
+        BOOL wouldNeedNewPage = offsetOnThisPageAfterThisCell > (RELEVANT_INSET(blockself.pageContentInset) + (RELEVANT_DIMENSION(pageRect) - (RELEVANT_SIZE(footerSizeForThisPage) + RELEVANT_END_INSET(blockself.pageContentInset))));
 
         //Check if a new page is going to be forced
         if (indexPath.section != 0 && indexPath.row == 0 && [blockself shouldStartSectionOnNewPage:indexPath.section])
@@ -171,6 +269,12 @@
         //If we do want a new page, move to it.
         if (wouldNeedNewPage)
         {
+            if (!CGSizeEqualToSize(CGSizeZero, footerSizeForThisPage))
+            {
+                addFooterToPage(startOffsetForThisPage, footerSizeForThisPage);
+            }
+
+            //Update the global variables for a new page
             currentPage ++;
             currentOffset = RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage + RELEVANT_POINT(pageRect);
         }
@@ -219,18 +323,24 @@
         layoutAttributes.frame = cellRect;
 
         //Add the attributes to our dictionary
-        [self.itemAttributes setObject:layoutAttributes forKey:indexPath];
+        [blockself.itemAttributes setObject:layoutAttributes forKey:indexPath];
 
+        //Update the pageNumberFoIndexPathLookup
+        blockself.pageNumberLookupDictionary[indexPath] = @(currentPage);
 
         if (isLast)
         {
-
             CGFloat n = RELEVANT_DIMENSION(blockself.collectionView.bounds);
             CGFloat x = currentOffset;
             blockself.totalContentLength =  ceilf(x / n) * n;
+
+            CGFloat currentOffsetForFinalPage = blockself.totalContentLength - n;
+
+            addFooterToPage(currentOffsetForFinalPage, [self sizeForFooterOnPage:currentPage]);
         }
 
     }];
+
 }
 
 - (CGFloat)getRelevantPoint:(CGRect)rect
@@ -280,6 +390,18 @@
         case UICollectionViewScrollDirectionHorizontal:
             return inset.left;   
     }   
+}
+
+- (CGFloat)getRelevantEndInset:(UIEdgeInsets)inset
+{
+    switch (self.scrollDirection)
+    {
+        case UICollectionViewScrollDirectionVertical:
+            return inset.bottom;
+
+        case UICollectionViewScrollDirectionHorizontal:
+            return inset.right;
+    }
 }
 
 - (CGSize)collectionViewContentSize
@@ -338,16 +460,46 @@
     return _itemAttributes[indexPath];
 }
 
+- (UICollectionViewLayoutAttributes *)layoutAttributesForSupplementaryViewOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
+{
+    return _footerAttributes[indexPath];
+}
+
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect
 {
-    return [[self.itemAttributes allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(UICollectionViewLayoutAttributes *evaluatedObject, NSDictionary *bindings) {
+    NSMutableArray *attributes = [NSMutableArray new];
+
+    [attributes addObjectsFromArray:[[self.itemAttributes allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(UICollectionViewLayoutAttributes *evaluatedObject, NSDictionary *bindings) {
         return CGRectIntersectsRect(rect, [evaluatedObject frame]);
-    }]];
+    }]]];
+
+    [attributes addObjectsFromArray:[[self.footerAttributes allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(UICollectionViewLayoutAttributes *evaluatedObject, NSDictionary *bindings) {
+        return CGRectIntersectsRect(rect, [evaluatedObject frame]);
+    }]]];
+
+    return [NSArray arrayWithArray:attributes];
 }
 
 - (BOOL)shouldInvalidateLayoutForBoundsChange:(CGRect)newBounds
 {
     return NO;
+}
+
+#pragma mark - Querying layout information
+
+- (NSInteger)pageNumberForIndexPath:(NSIndexPath *)indexPath
+{
+    NSNumber *num = self.pageNumberLookupDictionary[indexPath];
+
+    if (num != nil)
+        return num.integerValue;
+
+    return NSNotFound;
+}
+
+- (NSArray *)indexPathsOnPage:(NSInteger)pageNumber
+{
+    return [self.pageNumberLookupDictionary allKeysForObject:@(pageNumber)];
 }
 
 @end

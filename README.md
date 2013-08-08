@@ -1,64 +1,36 @@
 LNCollectionViewPagedLayout
 ===========================
 
-`UICollectionViewLayout` subclass that separates cells onto different pages if they are unable to fit on a single page.  
+The LNCollectionViewPagedLayout class organises the items in the collection view so that they do not get cut off when the scroll view is configured for paging. This is achieved by placing an item onto a different page if it could not be fully displayed on the previous screen without cutting off content.
+
+A paged layout works by configuring a few basic properties or implementing the LNCollectionViewDelegatePagedLayout protocol on your collection view’s delegate instance to determine the size of items and footers. Using the LNCollectionViewDelegatePagedLayout protocol you can dynamically size specific items instead of applying the same values to each individual item.
+
+Paged layouts ay out their content using a fixed distance in one direction and a scrollable distance in the other. For example, in a vertically scrolling table, the width of the content is constrained to the width of the corresponding collection view while the height of the content adjusts dynamically to match the number of pages required by the datasource. The layout is configured to scroll vertically by default but you can configure the scrolling direction using the scrollDirection property.
+
+Each section in a flow layout can have its own custom footer. To configure the footer for a page, you must configure the size of the footer to be something other than CGSizeZero. You can do this by implementing the appropriate delegate methods or by assigning appropriate values to the footerSize property. If the footer size is CGSizeZero, the corresponding view is not added to the collection view.
+
+Positioning of content on pages can be adjusted by assigning different values to the pageContentInset and minimumRowSpacing properties.
+
 
 Requirements
 ---
 - iOS 6  
 - ARC  
 
-Features
----
-- Bidirectional scrolling configurations by using the `scrollDirection` property.  
-- Adjustable content insets for the page by using the `pageContentInset` property.  
-- Adjustable spacing between cells by using the `minimumRowSpacing` property.  
-- Multiple section support.  
-- Ability to start new sections on the next page by using the `startAllSectionsOnNewPage` property or implementing the `LNCollectionViewDelegatePagedLayout` protocol.
-
 Usage
 ---
-See the header and demo for usage.
+**Creating an instance of LNCollectionViewPagedLayout with basic configuration:**
 
-	@interface LNCollectionViewPagedLayout : UICollectionViewLayout
-	
-	///The size of the cells
-	///The default value is CGSizeZero.
-	@property (nonatomic) CGSize itemSize;
-	
-	///The minimum space between each cell
-	///The default value is 10.0.
-	@property (nonatomic) CGFloat minimumRowSpacing;
-	
-	///When set to YES, the first row of a section will appear on a new page.
-	///The default value is NO.
-	@property (nonatomic) BOOL startAllSectionsOnNewPage;
-	
-	///The insets for the content of each page
-	///The default value is UIEdgeInsetsZero
-	@property (nonatomic) UIEdgeInsets pageContentInset;
-	
-	///The scroll direction of the collectionView
-	///The default value is UICollectionViewScrollDirectionVertical
-	@property (nonatomic) UICollectionViewScrollDirection scrollDirection;
-	
-	@end
-	
-	
-	@protocol LNCollectionViewDelegatePagedLayout <UICollectionViewDelegate>
-	
-	@optional
-	
-	///Retrieve the size of a cell at a specified indexPath
-	- (CGSize)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath;
-	
-	///Start a specified section on a new page rather than underneath an old section
-	- (BOOL)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout shouldStartSectionOnNewPage:(NSInteger)section;
-	
-	@end
+    LNCollectionViewPagedLayout *layout = [[LNCollectionViewPagedLayout alloc] init];
+    layout.pageContentInset = UIEdgeInsetsMake(10, 10, 10, 10);
+    layout.startAllSectionsOnNewPage = YES;
+    layout.minimumRowSpacing = 10.0f;
+    layout.scrollDirection = UICollectionViewScrollDirectionVertical;
 
+    self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:layout];
+
+See the demo application for more advanced usage.
 
 TODO
----  
-- Add the option to place a footer view at the bottom of each/specific page(s).  
+---   
 - Add to cocoapods.  
