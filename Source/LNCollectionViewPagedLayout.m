@@ -56,6 +56,7 @@
     _minimumRowSpacing = 10.0f;
     _startAllSectionsOnNewPage = NO;
     _itemSize = CGSizeZero;
+    _footerSize = CGSizeZero;
     _pageContentInset = UIEdgeInsetsZero;
     _scrollDirection = UICollectionViewScrollDirectionVertical;
 }
@@ -110,6 +111,24 @@
     }
 }
 
+- (void)setItemSize:(CGSize)itemSize
+{
+    if (CGSizeEqualToSize(_itemSize, itemSize) != YES)
+    {
+        _itemSize = itemSize;
+        [self invalidateLayout];
+    }
+}
+
+- (void)setFooterSize:(CGSize)footerSize
+{
+    if (CGSizeEqualToSize(_footerSize, footerSize) != YES)
+    {
+        _footerSize = footerSize;
+        [self invalidateLayout];
+    }
+}
+
 #pragma mark - Getting Properties
 
 - (BOOL)shouldStartSectionOnNewPage:(NSInteger)section
@@ -144,7 +163,7 @@
     {
         return [del collectionView:self.collectionView layout:self sizeForFooterOnPage:pageNumber];
     }
-    return CGSizeZero;
+    return self.footerSize;
 }
 
 #pragma mark - creating the layout
@@ -466,6 +485,8 @@
     return NO;
 }
 
+#pragma mark - Querying layout information
+
 - (NSInteger)pageNumberForIndexPath:(NSIndexPath *)indexPath
 {
     NSNumber *num = self.pageNumberLookupDictionary[indexPath];
@@ -474,6 +495,11 @@
         return num.integerValue;
 
     return NSNotFound;
+}
+
+- (NSArray *)indexPathsOnPage:(NSInteger)pageNumber
+{
+    return [self.pageNumberLookupDictionary allKeysForObject:@(pageNumber)];
 }
 
 @end

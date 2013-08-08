@@ -103,9 +103,9 @@
     switch (collectionViewLayout.scrollDirection)
     {
         case UICollectionViewScrollDirectionHorizontal:
-            return CGSizeMake(20, 100);
+            return CGSizeMake(20, 200);
         case UICollectionViewScrollDirectionVertical:
-            return CGSizeMake(100, 20);
+            return CGSizeMake(200, 20);
     }
 }
 
@@ -113,6 +113,7 @@
 {
     LNCollectionViewPagedLayout *layout = (LNCollectionViewPagedLayout *)collectionView.collectionViewLayout;
     NSInteger pageNumber = [layout pageNumberForIndexPath:indexPath];
+    NSInteger itemCount = [[layout indexPathsOnPage:pageNumber] count];
 
     UICollectionReusableView *view = [collectionView dequeueReusableSupplementaryViewOfKind:kind withReuseIdentifier:@"footerCell" forIndexPath:indexPath];
 
@@ -131,7 +132,7 @@
         [view addSubview:label];
     }
 
-    label.text = [@(pageNumber) stringValue];
+    label.text = [NSString stringWithFormat:@"Page: %i Item Count: %i",pageNumber,itemCount];
 
     return view;
 }
