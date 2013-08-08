@@ -30,6 +30,9 @@
 ///The default value is UICollectionViewScrollDirectionVertical
 @property (nonatomic) UICollectionViewScrollDirection scrollDirection;
 
+
+- (NSInteger)pageNumberForIndexPath:(NSIndexPath *)indexPath;
+
 @end
 
 
@@ -42,5 +45,8 @@
 
 ///Start a specified section on a new page rather than underneath an old section
 - (BOOL)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout shouldStartSectionOnNewPage:(NSInteger)section;
+
+///Get the size for the footer view under a specific index path on a specific page
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout sizeForFooterOnPage:(NSInteger)pageNumber;
 
 @end
