@@ -23,7 +23,8 @@
     LNCollectionViewPagedLayout *layout = [[LNCollectionViewPagedLayout alloc] init];
     layout.pageContentInset = UIEdgeInsetsMake(10, 10, 10, 10);
     layout.startAllSectionsOnNewPage = YES;
-    layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    layout.minimumRowSpacing = 10.0f;
+    layout.scrollDirection = UICollectionViewScrollDirectionVertical;
 
     self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:layout];
     self.collectionView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
@@ -32,6 +33,7 @@
     self.collectionView.pagingEnabled = YES;
 
     [self.collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"Cell"];
+    [self.collectionView registerClass:[UICollectionReusableView class] forSupplementaryViewOfKind:UICollectionElementKindSectionFooter withReuseIdentifier:@"footerCell"];
 
     [self.view addSubview:self.collectionView];
 
@@ -44,12 +46,16 @@
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
 {
-    return 2 + arc4random() % 7;
+    u_int32_t i = 2 + arc4random() % 7;
+    NSLog(@"%i sections", i);
+    return i;
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    return 5 + arc4random() % 15;
+    u_int32_t i = 5 + arc4random() % 15;
+    NSLog(@"%i rows in section %i",i, section);
+    return i;
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -90,6 +96,45 @@
     textLabel.backgroundColor = color;
 
     return cell;
+}
+
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout sizeForFooterOnPage:(NSInteger)pageNumber
+{
+    switch (collectionViewLayout.scrollDirection)
+    {
+        case UICollectionViewScrollDirectionHorizontal:
+            return CGSizeMake(20, 200);
+        case UICollectionViewScrollDirectionVertical:
+            return CGSizeMake(200, 20);
+    }
+}
+
+- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
+{
+    LNCollectionViewPagedLayout *layout = (LNCollectionViewPagedLayout *)collectionView.collectionViewLayout;
+    NSInteger pageNumber = [layout pageNumberForIndexPath:indexPath];
+    NSInteger itemCount = [[layout indexPathsOnPage:pageNumber] count];
+
+    UICollectionReusableView *view = [collectionView dequeueReusableSupplementaryViewOfKind:kind withReuseIdentifier:@"footerCell" forIndexPath:indexPath];
+
+    NSInteger labelTag = 8;
+    UILabel *label = (UILabel *)[view viewWithTag:labelTag];
+    if (label == nil)
+    {
+        label = [UILabel new];
+
+        label.backgroundColor = [UIColor whiteColor];
+        label.frame = view.bounds;
+        label.textAlignment = NSTextAlignmentCenter;
+        label.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
+
+        label.tag = labelTag;
+        [view addSubview:label];
+    }
+
+    label.text = [NSString stringWithFormat:@"Page: %i Item Count: %i",pageNumber,itemCount];
+
+    return view;
 }
 
 @end
