@@ -184,7 +184,7 @@
 
     //Using the bounds to get the pageRect was not stable as the origin is not always CGPointZero.
     __block LNCollectionViewPagedLayout *blockself = self;
-    CGRect zeroOriginBounds = (CGRect){.origin = CGPointZero, .size = blockself.collectionView.bounds.size};
+    CGRect zeroOriginBounds = (CGRect){.origin = CGPointZero, .size = blockself.collectionView.frame.size};
     __block CGRect pageRect = UIEdgeInsetsInsetRect(zeroOriginBounds, self.pageContentInset);
     __block NSInteger currentPage = 0;
     __block CGFloat currentOffset = RELEVANT_INSET(self.pageContentInset);
@@ -203,7 +203,7 @@
             case UICollectionViewScrollDirectionVertical:
             {
                 //Get the x of this footer
-                CGFloat x = CGRectGetWidth(blockself.collectionView.bounds)/2 - footerSize.width/2;
+                CGFloat x = CGRectGetWidth(blockself.collectionView.frame)/2 - footerSize.width/2;
 
                 //Update the cell rect
                 footerRect.size = footerSize;
@@ -214,7 +214,7 @@
             case UICollectionViewScrollDirectionHorizontal:
             {
                 //Get the y of this footer
-                CGFloat y = CGRectGetHeight(blockself.collectionView.bounds)/2 - footerSize.height/2;
+                CGFloat y = CGRectGetHeight(blockself.collectionView.frame)/2 - footerSize.height/2;
 
                 //Update the cell rect
                 footerRect.size = footerSize;
@@ -247,7 +247,7 @@
         NSAssert(itemSize.width <= CGRectGetWidth(pageRect),@"Cell must not exceed the page size");
 
         //Get the offset for the start of this page
-        CGFloat startOffsetForThisPage = (RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage);
+        CGFloat startOffsetForThisPage = (RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage);
 
         //Get the current offset before adding this cell
         CGFloat currentOffsetOnThisPageBeforeThisCell = currentOffset - startOffsetForThisPage;
@@ -278,13 +278,13 @@
 
             //Update the global variables for a new page
             currentPage ++;
-            currentOffset = RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage + RELEVANT_POINT(pageRect);
+            currentOffset = RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage + RELEVANT_POINT(pageRect);
         }
 
         CGRect cellRect = CGRectZero;
 
         //Detect if we are at the top of a page
-        BOOL isAtTheStartOfAPage = currentOffset == RELEVANT_DIMENSION(blockself.collectionView.bounds) * currentPage + RELEVANT_POINT(pageRect);
+        BOOL isAtTheStartOfAPage = currentOffset == RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage + RELEVANT_POINT(pageRect);
 
         //Get the offset for this cell
         CGFloat offsetForCell = isAtTheStartOfAPage ? currentOffset : currentOffset + blockself.minimumRowSpacing;
@@ -294,7 +294,7 @@
             case UICollectionViewScrollDirectionVertical:
             {
                 //Get the x of this cell
-                CGFloat x = CGRectGetWidth(blockself.collectionView.bounds)/2 - itemSize.width/2;
+                CGFloat x = CGRectGetWidth(blockself.collectionView.frame)/2 - itemSize.width/2;
 
                 //Update the cell rect
                 cellRect.size = itemSize;
@@ -305,7 +305,7 @@
             case UICollectionViewScrollDirectionHorizontal:
             {
                 //Get the y of this cell
-                CGFloat y = CGRectGetHeight(blockself.collectionView.bounds)/2 - itemSize.height/2;
+                CGFloat y = CGRectGetHeight(blockself.collectionView.frame)/2 - itemSize.height/2;
 
                 //Update the cell rect
                 cellRect.size = itemSize;
@@ -332,7 +332,7 @@
 
         if (isLast)
         {
-            CGFloat n = RELEVANT_DIMENSION(blockself.collectionView.bounds);
+            CGFloat n = RELEVANT_DIMENSION(blockself.collectionView.frame);
             CGFloat x = currentOffset;
             blockself.totalContentLength =  ceilf(x / n) * n;
 
