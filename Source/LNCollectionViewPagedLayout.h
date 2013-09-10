@@ -100,6 +100,13 @@
  */
 - (NSArray *)indexPathsOnPage:(NSInteger)pageNumber;
 
+/**
+ * Queries the layout for the total number of pages
+ *
+ * @return An NSInteger specifying how many pages there are in the collectionView
+ */
+- (NSInteger)numberOfPages;
+
 @end
 
 

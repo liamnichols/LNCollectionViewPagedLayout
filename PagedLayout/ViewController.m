@@ -112,6 +112,9 @@
     LNCollectionViewPagedLayout *layout = (LNCollectionViewPagedLayout *)collectionView.collectionViewLayout;
     NSInteger pageNumber = [layout pageNumberForIndexPath:indexPath];
     NSInteger itemCount = [[layout indexPathsOnPage:pageNumber] count];
+    NSInteger pageCount = [layout numberOfPages];
+
+    pageNumber ++;
 
     UICollectionReusableView *view = [collectionView dequeueReusableSupplementaryViewOfKind:kind withReuseIdentifier:@"footerCell" forIndexPath:indexPath];
 
@@ -130,7 +133,7 @@
         [view addSubview:label];
     }
 
-    label.text = [NSString stringWithFormat:@"Page: %i Item Count: %i",pageNumber,itemCount];
+    label.text = [NSString stringWithFormat:@"Page: %i of %i Item Count: %i",pageNumber,pageCount,itemCount];
 
     return view;
 }

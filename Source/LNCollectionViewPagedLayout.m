@@ -509,4 +509,9 @@
     return [self.pageNumberLookupDictionary allKeysForObject:@(pageNumber)];
 }
 
+- (NSInteger)numberOfPages
+{
+    return [[[self.pageNumberLookupDictionary allValues] valueForKeyPath:@"@max.intValue"] integerValue] + 1;
+}
+
 @end
