@@ -338,9 +338,10 @@
 
             CGFloat currentOffsetForFinalPage = blockself.totalContentLength - n;
 
+            footerSizeForThisPage = [self sizeForFooterOnPage:currentPage];
             if (!CGSizeEqualToSize(CGSizeZero, footerSizeForThisPage))
             {
-                addFooterToPage(currentOffsetForFinalPage, [self sizeForFooterOnPage:currentPage]);
+                addFooterToPage(currentOffsetForFinalPage, footerSizeForThisPage);
             }
         }
     }];
