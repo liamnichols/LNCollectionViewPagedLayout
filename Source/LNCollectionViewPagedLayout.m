@@ -202,6 +202,9 @@
         {
             case UICollectionViewScrollDirectionVertical:
             {
+                if (footerSize.width == 0)
+                    footerSize.width = CGRectGetWidth(pageRect);
+
                 //Get the x of this footer
                 CGFloat x = CGRectGetWidth(blockself.collectionView.frame)/2 - footerSize.width/2;
 
@@ -213,6 +216,9 @@
             }
             case UICollectionViewScrollDirectionHorizontal:
             {
+                if (footerSize.height == 0)
+                    footerSize.height = CGRectGetHeight(pageRect);
+
                 //Get the y of this footer
                 CGFloat y = CGRectGetHeight(blockself.collectionView.frame)/2 - footerSize.height/2;
 
@@ -293,6 +299,9 @@
         {
             case UICollectionViewScrollDirectionVertical:
             {
+                if (itemSize.width == 0)
+                    itemSize.width = CGRectGetWidth(pageRect);
+
                 //Get the x of this cell
                 CGFloat x = CGRectGetWidth(blockself.collectionView.frame)/2 - itemSize.width/2;
 
@@ -304,6 +313,9 @@
             }
             case UICollectionViewScrollDirectionHorizontal:
             {
+                if (itemSize.height == 0)
+                    itemSize.height = CGRectGetHeight(pageRect);
+
                 //Get the y of this cell
                 CGFloat y = CGRectGetHeight(blockself.collectionView.frame)/2 - itemSize.height/2;
 
