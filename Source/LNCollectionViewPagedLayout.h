@@ -110,9 +110,6 @@
 @end
 
 
-
-
-
 /**
  * The LNCollectionViewDelegatePagedLayout protocol defines methods that let you coordinate with a LNCollectionViewPagedLayout object to implement a paged layout. The methods of this protocol define the size of items and the spacing between item.
  *

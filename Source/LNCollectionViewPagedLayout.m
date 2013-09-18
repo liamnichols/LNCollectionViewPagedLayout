@@ -16,11 +16,11 @@
 
 @interface LNCollectionViewPagedLayout ()
 
-@property(nonatomic, assign) NSInteger itemCount;
-@property(nonatomic) CGFloat totalContentLength;
-@property(nonatomic, strong) NSMutableDictionary *itemAttributes;
-@property(nonatomic, strong) NSMutableDictionary *footerAttributes;
-@property(nonatomic, strong) NSMutableDictionary *pageNumberLookupDictionary;
+@property (nonatomic, assign) NSInteger itemCount;
+@property (nonatomic) CGFloat totalContentLength;
+@property (nonatomic, strong) NSMutableDictionary *itemAttributes;
+@property (nonatomic, strong) NSMutableDictionary *footerAttributes;
+@property (nonatomic, strong) NSMutableDictionary *pageNumberLookupDictionary;
 
 @end
 
