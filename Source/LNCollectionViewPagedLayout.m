@@ -399,14 +399,18 @@
 }
 
 - (void)enumerateIndexPaths:(void (^)(NSIndexPath *indexPath, BOOL isLast))block {
+    NSInteger total = [self getTotalItemCount];
+    NSInteger current = 1;
+
     NSInteger ls = [self.collectionView numberOfSections] - 1;
     for (NSInteger s = 0; s <= ls; s++) {
         NSInteger lr = [self.collectionView numberOfItemsInSection:s] - 1;
         for (NSInteger r = 0; r <= lr; r++) {
             if (block) {
-                BOOL last = (s == ls && r == lr);
+                BOOL last = (current == total);
                 block([NSIndexPath indexPathForRow:r inSection:s], last);
             }
+            current++;
         }
     }
 }
