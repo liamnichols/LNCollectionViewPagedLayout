@@ -205,7 +205,8 @@
         }
 
         //Create our layout attributes for this footer
-        NSIndexPath *footerIndexPath = [[self.pageNumberLookupDictionary allKeysForObject:@(currentPage)] lastObject];
+//        NSIndexPath *footerIndexPath = [[self.pageNumberLookupDictionary allKeysForObject:@(currentPage)] lastObject];
+        NSIndexPath *footerIndexPath = [NSIndexPath indexPathForRow:currentPage inSection:0];
         UICollectionViewLayoutAttributes *footerLayoutAttributes = [UICollectionViewLayoutAttributes layoutAttributesForSupplementaryViewOfKind:UICollectionElementKindSectionFooter withIndexPath:footerIndexPath];
 
         //Set the frame on the attributes
