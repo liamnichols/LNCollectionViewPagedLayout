@@ -222,106 +222,165 @@
         //Get the size of this cell
         CGSize itemSize = [self sizeForItemAtIndexPath:indexPath];
 
-        //Assert if the item is too tall
-        NSAssert(itemSize.height <= CGRectGetHeight(pageRect), @"Cell must not exceed the page size");
-        //Assert if the item is too wide
-        NSAssert(itemSize.width <= CGRectGetWidth(pageRect), @"Cell must not exceed the page size");
+        if (self.collectionView.pagingEnabled)
+        {
+            //Assert if the item is too tall
+            NSAssert(itemSize.height <= CGRectGetHeight(pageRect), @"Cell must not exceed the page size");
+            //Assert if the item is too wide
+            NSAssert(itemSize.width <= CGRectGetWidth(pageRect), @"Cell must not exceed the page size");
 
-        //Get the offset for the start of this page
-        CGFloat startOffsetForThisPage = (RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage);
+            //Get the offset for the start of this page
+            CGFloat startOffsetForThisPage = (RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage);
 
-        //Get the current offset before adding this cell
-        CGFloat currentOffsetOnThisPageBeforeThisCell = currentOffset - startOffsetForThisPage;
+            //Get the current offset before adding this cell
+            CGFloat currentOffsetOnThisPageBeforeThisCell = currentOffset - startOffsetForThisPage;
 
-        //Get the spacing to place above this cell (if needed)
-        CGFloat spacingAboveThisCell = currentOffsetOnThisPageBeforeThisCell == RELEVANT_INSET(blockself.pageContentInset) ? 0 : blockself.minimumRowSpacing;
+            //Get the spacing to place above this cell (if needed)
+            CGFloat spacingAboveThisCell = currentOffsetOnThisPageBeforeThisCell == RELEVANT_INSET(blockself.pageContentInset) ? 0 : blockself.minimumRowSpacing;
 
-        //Get the offset after adding this cell
-        CGFloat offsetOnThisPageAfterThisCell = currentOffsetOnThisPageBeforeThisCell + spacingAboveThisCell + RELEVANT_SIZE(itemSize);
+            //Get the offset after adding this cell
+            CGFloat offsetOnThisPageAfterThisCell = currentOffsetOnThisPageBeforeThisCell + spacingAboveThisCell + RELEVANT_SIZE(itemSize);
 
-        //Get the size of the footer for this page
-        CGSize footerSizeForThisPage = [self sizeForFooterOnPage:currentPage];
+            //Get the size of the footer for this page
+            CGSize footerSizeForThisPage = [self sizeForFooterOnPage:currentPage];
 
-        //Check if this would lap over onto a new page
-        BOOL wouldNeedNewPage = (offsetOnThisPageAfterThisCell - spacingAboveThisCell) > (RELEVANT_INSET(blockself.pageContentInset) + (RELEVANT_DIMENSION(pageRect) - (RELEVANT_SIZE(footerSizeForThisPage) + RELEVANT_END_INSET(blockself.pageContentInset))));
+            //Check if this would lap over onto a new page
+            BOOL wouldNeedNewPage = (offsetOnThisPageAfterThisCell - spacingAboveThisCell) > (RELEVANT_INSET(blockself.pageContentInset) + (RELEVANT_DIMENSION(pageRect) - (RELEVANT_SIZE(footerSizeForThisPage) + RELEVANT_END_INSET(blockself.pageContentInset))));
 
-        //Check if a new page is going to be forced
-        if (indexPath.section != 0 && indexPath.row == 0 && [blockself shouldStartSectionOnNewPage:indexPath.section])
-            wouldNeedNewPage = YES;
+            //Check if a new page is going to be forced
+            if (indexPath.section != 0 && indexPath.row == 0 && [blockself shouldStartSectionOnNewPage:indexPath.section])
+                wouldNeedNewPage = YES;
 
-        //If we do want a new page, move to it.
-        if (wouldNeedNewPage) {
-            if (!CGSizeEqualToSize(CGSizeZero, footerSizeForThisPage)) {
-                addFooterToPage(startOffsetForThisPage, footerSizeForThisPage);
+            //If we do want a new page, move to it.
+            if (wouldNeedNewPage) {
+                if (!CGSizeEqualToSize(CGSizeZero, footerSizeForThisPage)) {
+                    addFooterToPage(startOffsetForThisPage, footerSizeForThisPage);
+                }
+
+                //Update the global variables for a new page
+                currentPage++;
+                currentOffset = RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage + RELEVANT_POINT(pageRect);
             }
 
-            //Update the global variables for a new page
-            currentPage++;
-            currentOffset = RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage + RELEVANT_POINT(pageRect);
+            CGRect cellRect = CGRectZero;
+
+            //Detect if we are at the top of a page
+            BOOL isAtTheStartOfAPage = currentOffset == RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage + RELEVANT_POINT(pageRect);
+
+            //Get the offset for this cell
+            CGFloat offsetForCell = isAtTheStartOfAPage ? currentOffset : currentOffset + blockself.minimumRowSpacing;
+
+            switch (blockself.scrollDirection) {
+                case UICollectionViewScrollDirectionVertical: {
+                    if (itemSize.width == 0)
+                        itemSize.width = CGRectGetWidth(pageRect);
+
+                    //Get the x of this cell
+                    CGFloat x = CGRectGetWidth(blockself.collectionView.frame) / 2 - itemSize.width / 2;
+
+                    //Update the cell rect
+                    cellRect.size = itemSize;
+                    cellRect.origin.y = offsetForCell;
+                    cellRect.origin.x = x;
+                    break;
+                }
+                case UICollectionViewScrollDirectionHorizontal: {
+                    if (itemSize.height == 0)
+                        itemSize.height = CGRectGetHeight(pageRect);
+
+                    //Get the y of this cell
+                    CGFloat y = CGRectGetHeight(blockself.collectionView.frame) / 2 - itemSize.height / 2;
+
+                    //Update the cell rect
+                    cellRect.size = itemSize;
+                    cellRect.origin.y = y;
+                    cellRect.origin.x = offsetForCell;
+                    break;
+                }
+            }
+
+            //Update the current offset
+            currentOffset = offsetForCell + RELEVANT_SIZE(cellRect.size);
+
+            //Create our layout attributes for this item
+            UICollectionViewLayoutAttributes *layoutAttributes = [UICollectionViewLayoutAttributes layoutAttributesForCellWithIndexPath:indexPath];
+
+            //Set the frame on the attributes
+            layoutAttributes.frame = cellRect;
+
+            //Add the attributes to our dictionary
+            [blockself.itemAttributes setObject:layoutAttributes forKey:indexPath];
+
+            //Update the pageNumberFoIndexPathLookup
+            blockself.pageNumberLookupDictionary[indexPath] = @(currentPage);
+
+            if (isLast) {
+                CGFloat n = RELEVANT_DIMENSION(blockself.collectionView.frame);
+                CGFloat x = currentOffset;
+                blockself.totalContentLength = ceilf(x / n) * n;
+
+                CGFloat currentOffsetForFinalPage = blockself.totalContentLength - n;
+
+                footerSizeForThisPage = [self sizeForFooterOnPage:currentPage];
+                if (!CGSizeEqualToSize(CGSizeZero, footerSizeForThisPage)) {
+                    addFooterToPage(currentOffsetForFinalPage, footerSizeForThisPage);
+                }
+            }
         }
+        else
+        {
+            CGRect cellRect = CGRectZero;
 
-        CGRect cellRect = CGRectZero;
+            switch (blockself.scrollDirection) {
+                case UICollectionViewScrollDirectionVertical: {
+                    if (itemSize.width == 0)
+                        itemSize.width = CGRectGetWidth(pageRect);
 
-        //Detect if we are at the top of a page
-        BOOL isAtTheStartOfAPage = currentOffset == RELEVANT_DIMENSION(blockself.collectionView.frame) * currentPage + RELEVANT_POINT(pageRect);
+                    //Get the x of this cell
+                    CGFloat x = CGRectGetWidth(blockself.collectionView.frame) / 2 - itemSize.width / 2;
 
-        //Get the offset for this cell
-        CGFloat offsetForCell = isAtTheStartOfAPage ? currentOffset : currentOffset + blockself.minimumRowSpacing;
+                    //Update the cell rect
+                    cellRect.size = itemSize;
+                    cellRect.origin.y = currentOffset;
+                    cellRect.origin.x = x;
+                    break;
+                }
+                case UICollectionViewScrollDirectionHorizontal: {
+                    if (itemSize.height == 0)
+                        itemSize.height = CGRectGetHeight(pageRect);
 
-        switch (blockself.scrollDirection) {
-            case UICollectionViewScrollDirectionVertical: {
-                if (itemSize.width == 0)
-                    itemSize.width = CGRectGetWidth(pageRect);
+                    //Get the y of this cell
+                    CGFloat y = CGRectGetHeight(blockself.collectionView.frame) / 2 - itemSize.height / 2;
 
-                //Get the x of this cell
-                CGFloat x = CGRectGetWidth(blockself.collectionView.frame) / 2 - itemSize.width / 2;
-
-                //Update the cell rect
-                cellRect.size = itemSize;
-                cellRect.origin.y = offsetForCell;
-                cellRect.origin.x = x;
-                break;
+                    //Update the cell rect
+                    cellRect.size = itemSize;
+                    cellRect.origin.y = y;
+                    cellRect.origin.x = currentOffset;
+                    break;
+                }
             }
-            case UICollectionViewScrollDirectionHorizontal: {
-                if (itemSize.height == 0)
-                    itemSize.height = CGRectGetHeight(pageRect);
 
-                //Get the y of this cell
-                CGFloat y = CGRectGetHeight(blockself.collectionView.frame) / 2 - itemSize.height / 2;
+            //Create our layout attributes for this item
+            UICollectionViewLayoutAttributes *layoutAttributes = [UICollectionViewLayoutAttributes layoutAttributesForCellWithIndexPath:indexPath];
 
-                //Update the cell rect
-                cellRect.size = itemSize;
-                cellRect.origin.y = y;
-                cellRect.origin.x = offsetForCell;
-                break;
+            //Set the frame on the attributes
+            layoutAttributes.frame = cellRect;
+
+            //Add the attributes to our dictionary
+            [blockself.itemAttributes setObject:layoutAttributes forKey:indexPath];
+
+            if (isLast)
+            {
+                //Update the current offset
+                currentOffset = currentOffset + RELEVANT_SIZE(cellRect.size) + RELEVANT_END_INSET(blockself.pageContentInset);
+
+                //set the totalContentLength
+                blockself.totalContentLength = currentOffset;
             }
-        }
-
-        //Update the current offset
-        currentOffset = offsetForCell + RELEVANT_SIZE(cellRect.size);
-
-        //Create our layout attributes for this item
-        UICollectionViewLayoutAttributes *layoutAttributes = [UICollectionViewLayoutAttributes layoutAttributesForCellWithIndexPath:indexPath];
-
-        //Set the frame on the attributes
-        layoutAttributes.frame = cellRect;
-
-        //Add the attributes to our dictionary
-        [blockself.itemAttributes setObject:layoutAttributes forKey:indexPath];
-
-        //Update the pageNumberFoIndexPathLookup
-        blockself.pageNumberLookupDictionary[indexPath] = @(currentPage);
-
-        if (isLast) {
-            CGFloat n = RELEVANT_DIMENSION(blockself.collectionView.frame);
-            CGFloat x = currentOffset;
-            blockself.totalContentLength = ceilf(x / n) * n;
-
-            CGFloat currentOffsetForFinalPage = blockself.totalContentLength - n;
-
-            footerSizeForThisPage = [self sizeForFooterOnPage:currentPage];
-            if (!CGSizeEqualToSize(CGSizeZero, footerSizeForThisPage)) {
-                addFooterToPage(currentOffsetForFinalPage, footerSizeForThisPage);
+            else
+            {
+                //Update the current offset
+                currentOffset = currentOffset + RELEVANT_SIZE(cellRect.size) + blockself.minimumRowSpacing;
             }
         }
     }];
