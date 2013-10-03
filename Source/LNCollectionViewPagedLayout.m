@@ -385,6 +385,12 @@
         }
     }];
 
+
+    id <LNCollectionViewDelegatePagedLayout> del = (id <LNCollectionViewDelegatePagedLayout>) self.collectionView.delegate;
+
+    if ([del respondsToSelector:@selector(collectionView:didFinishPreparingLayout:)])
+        [del collectionView:self.collectionView didFinishPreparingLayout:self];
+
 }
 
 - (CGFloat)getRelevantPoint:(CGRect)rect {
@@ -528,16 +534,6 @@
 
 - (NSInteger)numberOfPages {
     return [[[self.pageNumberLookupDictionary allValues] valueForKeyPath:@"@max.intValue"] integerValue] + 1;
-}
-
-- (void)finalizeCollectionViewUpdates
-{
-    [super finalizeCollectionViewUpdates];
-
-    id <LNCollectionViewDelegatePagedLayout> del = (id <LNCollectionViewDelegatePagedLayout>) self.collectionView.delegate;
-
-    if ([del respondsToSelector:@selector(collectionView:didFinalizeCollectionViewUpdatesForLayout:)])
-        [del collectionView:self.collectionView didFinalizeCollectionViewUpdatesForLayout:self];
 }
 
 @end

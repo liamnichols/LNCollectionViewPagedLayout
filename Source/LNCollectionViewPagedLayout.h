@@ -161,6 +161,6 @@
  * @param collectionView The UICollectionView that is having the updates applied.
  * @param collectionViewLayout The LNCollectionViewPagedLayout that has finalize the updates.
  */
-- (void)collectionView:(UICollectionView *)collectionView didFinalizeCollectionViewUpdatesForLayout:(LNCollectionViewPagedLayout *)collectionViewLayout;
+- (void)collectionView:(UICollectionView *)collectionView didFinishPreparingLayout:(LNCollectionViewPagedLayout *)collectionViewLayout;
 
 @end
