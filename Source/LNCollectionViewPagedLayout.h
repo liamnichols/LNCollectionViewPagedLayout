@@ -155,4 +155,12 @@
  */
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(LNCollectionViewPagedLayout *)collectionViewLayout sizeForFooterOnPage:(NSInteger)pageNumber;
 
+/**
+ * Notifies the delegate that all collectionView updates have been finalized.
+ *
+ * @param collectionView The UICollectionView that is having the updates applied.
+ * @param collectionViewLayout The LNCollectionViewPagedLayout that has finalize the updates.
+ */
+- (void)collectionView:(UICollectionView *)collectionView didFinalizeCollectionViewUpdatesForLayout:(LNCollectionViewPagedLayout *)collectionViewLayout;
+
 @end
